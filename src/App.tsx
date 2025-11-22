@@ -1,11 +1,25 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./components/Login";
+import Jobs from "./components/Jobs";
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <h1 className="text-4xl font-bold text-gray-900">
-        JobSeeker CRM
-      </h1>
-    </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route
+          path="/jobs"
+          element={
+            <ProtectedRoute>
+              <Jobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
