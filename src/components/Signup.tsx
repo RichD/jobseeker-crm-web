@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 
-function Login() {
+function Signup() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const LOGIN_URL = import.meta.env.VITE_LOGIN_URL;
+  const [emailErrors, setEmailErrors] = useState<string[]>([]);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const SIGNUP_URL = import.meta.env.VITE_SIGNUP_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -16,10 +17,11 @@ function Login() {
     }
   }, [navigate]);
 
-  async function postLogin() {
-    setError("");
+  async function postSignup() {
+    setEmailErrors([]);
+    setPasswordErrors([]);
 
-    const response = await fetch(LOGIN_URL, {
+    const response = await fetch(SIGNUP_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -27,18 +29,20 @@ function Login() {
 
     const data = await response.json();
 
-    if (data.error) {
-      setError(data.error);
-    } else {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userEmail", data.user.email);
-      navigate("/jobs");
+    if (!response.ok) {
+      setEmailErrors(data.errors?.email || []);
+      setPasswordErrors(data.errors?.password || []);
+      return;
     }
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("userEmail", data.user.email);
+    navigate("/jobs");
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await postLogin();
+    await postSignup();
   };
 
   return (
@@ -46,15 +50,9 @@ function Login() {
       <Navbar />
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-          <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">Signup</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            )}
-
             <input
               type="email"
               placeholder="Email"
@@ -62,6 +60,14 @@ function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+
+            {emailErrors.length > 0 && (
+    <div className="text-red-600 text-sm mt-1">
+      {emailErrors.map((err, index) => (
+        <p key={index}>{err}</p>
+      ))}
+    </div>
+  )}
 
             <input
               type="password"
@@ -71,27 +77,34 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
 
+{passwordErrors.length > 0 && (
+    <div className="text-red-600 text-sm mt-1">
+      {passwordErrors.map((err, index) => (
+        <p key={index}>{err}</p>
+      ))}
+    </div>
+  )}
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
-              Login
+              Signup
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-4">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Sign up
-              </Link>
-            </p>
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Login
+            </Link>
+          </p>
         </div>
       </div>
     </>
   );
 }
 
-export default Login;
+export default Signup;

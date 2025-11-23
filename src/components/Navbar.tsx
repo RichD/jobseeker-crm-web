@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 function Navbar() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const email = localStorage.getItem("userEmail");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -13,6 +14,8 @@ function Navbar() {
     <nav className="bg-blue-600 text-white p-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-bold">JobSeeker CRM</h1>
+
+        {email && <span className="text-sm">Logged in as {email}</span>}
 
         {token && (
           <button
