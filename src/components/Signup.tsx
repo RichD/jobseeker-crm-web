@@ -8,7 +8,7 @@ function Signup() {
   const [password, setPassword] = useState("");
   const [emailErrors, setEmailErrors] = useState<string[]>([]);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
-  const SIGNUP_URL = import.meta.env.VITE_SIGNUP_URL;
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -21,7 +21,7 @@ function Signup() {
     setEmailErrors([]);
     setPasswordErrors([]);
 
-    const response = await fetch(SIGNUP_URL, {
+    const response = await fetch(`${API_URL}/auth/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -53,37 +53,54 @@ function Signup() {
           <h2 className="text-2xl font-bold mb-6 text-center">Signup</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {emailErrors.length > 0 && (
+                <div className="text-red-600 text-sm mt-1">
+                  {emailErrors.map((err, index) => (
+                    <p key={index}>{err}</p>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            {emailErrors.length > 0 && (
-    <div className="text-red-600 text-sm mt-1">
-      {emailErrors.map((err, index) => (
-        <p key={index}>{err}</p>
-      ))}
-    </div>
-  )}
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              {passwordErrors.length > 0 && (
+                <div className="text-red-600 text-sm mt-1">
+                  {passwordErrors.map((err, index) => (
+                    <p key={index}>{err}</p>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-{passwordErrors.length > 0 && (
-    <div className="text-red-600 text-sm mt-1">
-      {passwordErrors.map((err, index) => (
-        <p key={index}>{err}</p>
-      ))}
-    </div>
-  )}
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors"

@@ -3,6 +3,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Jobs from "./components/Jobs";
+import JobForm from "./components/JobForm";
 
 function App() {
   return (
@@ -15,6 +16,22 @@ function App() {
           element={
             <ProtectedRoute>
               <Jobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/new"
+          element={
+            <ProtectedRoute>
+              <JobForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/jobs/:id"
+          element={
+            <ProtectedRoute>
+              <JobForm />
             </ProtectedRoute>
           }
         />
