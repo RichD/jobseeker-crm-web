@@ -1,6 +1,7 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
+import { apiFetch } from "../utils/api"
 
 function JobForm() {
   const token = localStorage.getItem("token");
@@ -37,9 +38,10 @@ function JobForm() {
   useEffect(() => {
     if (id) {
       const fetchJob = async () => {
-        const response = await fetch(`${API_URL}/jobs/${id}`, {
+        const response = await apiFetch(`${API_URL}/jobs/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
         const data = await response.json();
 
         setJob({
@@ -64,7 +66,7 @@ function JobForm() {
     const method = id ? "PATCH" : "POST";
     const url = id ? `${API_URL}/jobs/${id}` : `${API_URL}/jobs`;
 
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -98,7 +100,7 @@ function JobForm() {
       return;
     }
 
-    const response = await fetch(`${API_URL}/jobs/${id}`, {
+    const response = await apiFetch(`${API_URL}/jobs/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

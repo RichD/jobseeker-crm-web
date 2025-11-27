@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
+import { apiFetch } from "../utils/api";
 
 function Jobs() {
   interface Job {
@@ -17,7 +18,7 @@ function Jobs() {
     const fetchJobs = async () => {
       const API_URL = import.meta.env.VITE_API_URL;
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_URL}/jobs`, {
+      const response = await apiFetch(`${API_URL}/jobs`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
