@@ -7,7 +7,7 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const API_URL = import.meta.env.VITE_API_URL
+  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -98,14 +98,14 @@ function Login() {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-4">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Sign up
-              </Link>
-            </p>
+            Don't have an account?{" "}
+            <Link
+              to="/signup"
+              className="text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </>
