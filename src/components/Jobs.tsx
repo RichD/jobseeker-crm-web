@@ -13,12 +13,14 @@ function Jobs() {
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchJobs = async () => {
       const API_URL = import.meta.env.VITE_API_URL;
       const token = localStorage.getItem("token");
-      const response = await apiFetch(`${API_URL}/jobs`, {
+      const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
+      const response = await apiFetch(`${API_URL}/jobs${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -28,7 +30,7 @@ function Jobs() {
     };
 
     fetchJobs();
-  }, []);
+  }, [searchTerm]);
 
   if (loading) {
     return (
@@ -47,6 +49,15 @@ function Jobs() {
       <div className="min-h-screen bg-gray-100 p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">My Jobs</h1>
+
+          <input
+            type="text"
+            placeholder="Search jobs..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-md"
+          />
+
           <Link
             to="/jobs/new"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
