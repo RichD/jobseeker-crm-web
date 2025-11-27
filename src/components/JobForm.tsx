@@ -1,7 +1,7 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
 import Navbar from "./Navbar";
-import { apiFetch } from "../utils/api"
+import { apiFetch } from "../utils/api";
 
 function JobForm() {
   const token = localStorage.getItem("token");
@@ -216,6 +216,19 @@ function JobForm() {
                   {errors.url.map((err, index) => (
                     <p key={index}>{err}</p>
                   ))}
+                </div>
+              )}
+
+              {id && job.url && (
+                <div className="mb-4">
+                  <a
+                    href={job.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 text-xs"
+                  >
+                    View original job posting →
+                  </a>
                 </div>
               )}
             </div>

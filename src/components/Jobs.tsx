@@ -9,17 +9,27 @@ function Jobs() {
     title: string;
     company: string;
     status: string;
+    url: string | null;
   }
 
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [status, setStatus] = useState("");
 
   useEffect(() => {
+    const buildQuery = () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append("q", searchTerm);
+      if (status) params.append("status", status);
+      return params.toString() ? `?${params.toString()}` : "";
+    };
+
+    const query = buildQuery();
+
     const fetchJobs = async () => {
       const API_URL = import.meta.env.VITE_API_URL;
       const token = localStorage.getItem("token");
-      const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
       const response = await apiFetch(`${API_URL}/jobs${query}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -30,7 +40,7 @@ function Jobs() {
     };
 
     fetchJobs();
-  }, [searchTerm]);
+  }, [searchTerm, status]);
 
   if (loading) {
     return (
@@ -58,6 +68,24 @@ function Jobs() {
             className="px-4 py-2 border border-gray-300 rounded-md"
           />
 
+          <div>
+            <label htmlFor="status">Status: </label>
+            <select
+              id="status"
+              name="status"
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value=""></option>
+              <option value="saved">Saved</option>
+              <option value="applied">Applied</option>
+              <option value="interviewing">Interviewing</option>
+              <option value="offer">Offer</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+
           <Link
             to="/jobs/new"
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
@@ -76,15 +104,19 @@ function Jobs() {
           <table className="w-full bg-white rounded-lg shadow-md">
             <thead>
               <tr className="border-b">
-                <th>Title</th>
-                <th>Company</th>
-                <th>Status</th>
+                <th className="text-left p-3">Title</th>
+                <th className="text-left p-3">Company</th>
+                <th className="text-left p-3">Status</th>
+                <th className="text-left p-3">Link</th>
               </tr>
             </thead>
             <tbody>
-              {jobs.map((job) => (
-                <tr key={job.id}>
-                  <td>
+              {jobs.map((job, index) => (
+                <tr
+                  key={job.id}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                >
+                  <td className="p-3">
                     <Link
                       to={`/jobs/${job.id}`}
                       className="text-blue-600 hover:text-blue-800"
@@ -92,8 +124,20 @@ function Jobs() {
                       {job.title}
                     </Link>
                   </td>
-                  <td>{job.company}</td>
-                  <td>{job.status}</td>
+                  <td className="p-3">{job.company}</td>
+                  <td className="p-3">{job.status}</td>
+                  <td className="p-3">
+                    {job.url && (
+                      <a
+                        href={job.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        View Job
+                      </a>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

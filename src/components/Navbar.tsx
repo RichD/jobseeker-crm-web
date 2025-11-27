@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -13,7 +13,9 @@ function Navbar() {
   return (
     <nav className="bg-blue-600 text-white p-4">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold">JobSeeker CRM</h1>
+        <h1 className="text-2xl font-bold">
+          <Link to="/" className="hover:text-gray-300">JobSeeker CRM</Link>
+        </h1>
 
         {email && <span className="text-sm">Logged in as {email}</span>}
 
