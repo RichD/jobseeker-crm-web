@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Navbar from "./Navbar";
+
+import Navbar from "./layout/Navbar";
 
 function Login() {
   const navigate = useNavigate();

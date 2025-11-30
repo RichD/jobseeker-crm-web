@@ -1,17 +1,13 @@
 import { useState, useEffect } from "react";
-import Navbar from "./Navbar";
 import { Link } from "react-router-dom";
-import { apiFetch } from "../utils/api";
+
+import { apiFetch } from "@/utils/api";
+import { type Job } from "@/types/job";
+import { JOB_STATUSES } from "@/constants/jobs";
+
+import Navbar from "./layout/Navbar";
 
 function Jobs() {
-  interface Job {
-    id: number;
-    title: string;
-    company: string;
-    status: string;
-    url: string | null;
-  }
-
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,11 +74,11 @@ function Jobs() {
               onChange={(e) => setStatus(e.target.value)}
             >
               <option value=""></option>
-              <option value="saved">Saved</option>
-              <option value="applied">Applied</option>
-              <option value="interviewing">Interviewing</option>
-              <option value="offer">Offer</option>
-              <option value="rejected">Rejected</option>
+              {JOB_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
 

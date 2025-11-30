@@ -1,25 +1,17 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate, Link, useParams } from "react-router-dom";
-import Navbar from "./Navbar";
-import { apiFetch } from "../utils/api";
+
+import { apiFetch } from "@/utils/api";
+import { type Job } from "@/types/job";
+import { JOB_STATUSES } from "@/constants/jobs";
+
+import Navbar from "./layout/Navbar";
 
 function JobForm() {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
   const { id } = useParams();
-
-  interface Job {
-    title: string;
-    company: string;
-    location?: string;
-    url?: string;
-    status?: string;
-    description?: string;
-    notes?: string;
-    compensation?: string;
-    applied_at?: string;
-  }
 
   const [job, setJob] = useState<Job>({
     title: "",
@@ -247,11 +239,11 @@ function JobForm() {
                 value={job.status}
                 onChange={handleChange}
               >
-                <option value="saved">Saved</option>
-                <option value="applied">Applied</option>
-                <option value="interviewing">Interviewing</option>
-                <option value="offer">Offer</option>
-                <option value="rejected">Rejected</option>
+                {JOB_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </option>
+                ))}
               </select>
               {errors.status && errors.status.length > 0 && (
                 <div className="text-red-600 text-sm mt-1">
