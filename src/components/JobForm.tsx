@@ -3,7 +3,9 @@ import { useNavigate, Link, useParams } from "react-router-dom";
 
 import { apiFetch } from "@/utils/api";
 import { type Job } from "@/types/job";
-import { JOB_STATUSES } from "@/constants/jobs";
+import { type Skill } from "@/types/skill";
+import { type JobSkill } from "@/types/job_skill";
+import { JOB_STATUSES, JOB_SKILL_CLASSIFICATIONS } from "@/constants/jobs";
 
 import Navbar from "./layout/Navbar";
 
@@ -26,30 +28,62 @@ function JobForm() {
   });
 
   const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [jobSkills, setJobSkills] = useState<JobSkill[]>([]);
+  const [suggestedSkills, setSuggestedSkills] = useState<Skill[]>([]);
+  const [selectedClassifications, setSelectedClassifications] = useState<
+    Record<number, string>
+  >({});
 
   useEffect(() => {
-    if (id) {
-      const fetchJob = async () => {
-        const response = await apiFetch(`${API_URL}/jobs/${id}`, {
+    if (!id) return;
+
+    const fetchJob = async () => {
+      const response = await apiFetch(`${API_URL}/jobs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setJob({
+        title: data.job.title ?? "",
+        company: data.job.company ?? "",
+        location: data.job.location ?? "",
+        url: data.job.url ?? "",
+        status: data.job.status ?? "saved",
+        description: data.job.description ?? "",
+        notes: data.job.notes ?? "",
+        compensation: data.job.compensation ?? "",
+        applied_at: data.job.applied_at ?? "",
+      });
+    };
+
+    const fetchJobSkills = async () => {
+      const response = await apiFetch(`${API_URL}/jobs/${id}/skills`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      setJobSkills(data.skills);
+      return data.skills; // return so we can check length
+    };
+
+    const fetchSuggestedSkills = async () => {
+      const response = await apiFetch(
+        `${API_URL}/jobs/${id}/skills?suggest=true`,
+        {
           headers: { Authorization: `Bearer ${token}` },
-        });
+        }
+      );
+      const data = await response.json();
+      setSuggestedSkills(data.suggested_skills);
+    };
 
-        const data = await response.json();
+    const loadJobData = async () => {
+      await fetchJob();
+      const skills = await fetchJobSkills();
+      if (skills.length === 0) {
+        await fetchSuggestedSkills();
+      }
+    };
 
-        setJob({
-          title: data.job.title ?? "",
-          company: data.job.company ?? "",
-          location: data.job.location ?? "",
-          url: data.job.url ?? "",
-          status: data.job.status ?? "saved",
-          description: data.job.description ?? "",
-          notes: data.job.notes ?? "",
-          compensation: data.job.compensation ?? "",
-          applied_at: data.job.applied_at ?? "",
-        });
-      };
-      fetchJob();
-    }
+    loadJobData();
   }, [id, API_URL, token]);
 
   const saveJob = async () => {
@@ -103,6 +137,124 @@ function JobForm() {
       navigate("/jobs");
     } else {
       alert("Failed to delete job");
+    }
+  };
+
+  const handleAddSkill = async (skillId: number, classification: string) => {
+    const response = await apiFetch(`${API_URL}/jobs/${id}/skills`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        skills: [
+          {
+            skill_id: skillId,
+            classification: classification,
+            years_required: null,
+          },
+        ],
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setJobSkills([...jobSkills, ...data.job_skills]);
+      setSuggestedSkills(suggestedSkills.filter((s) => s.id !== skillId));
+    } else {
+      alert("Failed to add skill");
+    }
+  };
+
+  const handleRemoveSkill = async (jobSkillId: number) => {
+    const response = await apiFetch(
+      `${API_URL}/jobs/${id}/skills/${jobSkillId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      const updatedSkills = jobSkills.filter((js) => js.id !== jobSkillId);
+      setJobSkills(updatedSkills);
+
+      // Re-fetch suggestions if we just removed the last skill
+      if (updatedSkills.length === 0) {
+        const suggestResponse = await apiFetch(
+          `${API_URL}/jobs/${id}/skills?suggest=true`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const data = await suggestResponse.json();
+        setSuggestedSkills(data.suggested_skills);
+      }
+    } else {
+      alert("Failed to remove skill");
+    }
+  };
+
+  const handleAddAllSkills = async () => {
+    const skillsToAdd = suggestedSkills.map((skill) => ({
+      skill_id: skill.id!,
+      classification: selectedClassifications[skill.id!] || "required",
+      years_required: null,
+    }));
+
+    const response = await apiFetch(`${API_URL}/jobs/${id}/skills`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ skills: skillsToAdd }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setJobSkills([...jobSkills, ...data.job_skills]);
+      setSuggestedSkills([]);
+    } else {
+      alert("Failed to add all skills");
+    }
+  };
+
+  const handleRemoveAllSkills = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to remove all ${jobSkills.length} skills?`
+      )
+    ) {
+      return;
+    }
+
+    const deletePromises = jobSkills.map((jobSkill) =>
+      apiFetch(`${API_URL}/jobs/${id}/skills/${jobSkill.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+    );
+
+    const results = await Promise.all(deletePromises);
+    const allSuccessful = results.every((r) => r.ok);
+
+    if (allSuccessful) {
+      setJobSkills([]);
+      // Re-fetch suggestions
+      const suggestResponse = await apiFetch(
+        `${API_URL}/jobs/${id}/skills?suggest=true`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await suggestResponse.json();
+      setSuggestedSkills(data.suggested_skills);
+    } else {
+      alert("Failed to remove some skills");
     }
   };
 
@@ -377,6 +529,102 @@ function JobForm() {
               )}
             </div>
           </form>
+
+          {id && jobSkills.length > 0 && (
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">
+                  Current Skills ({jobSkills.length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleRemoveAllSkills}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Remove All
+                </button>
+              </div>
+              {jobSkills.map((jobSkill) => (
+                <div
+                  key={jobSkill.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded border"
+                >
+                  <span className="font-medium">{jobSkill.skill.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
+                      {jobSkill.classification}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        jobSkill.id && handleRemoveSkill(jobSkill.id)
+                      }
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {id && suggestedSkills.length > 0 && (
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">
+                  Suggested Skills ({suggestedSkills.length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAddAllSkills}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Add All
+                </button>
+              </div>
+              {suggestedSkills.map((skill) => (
+                <div
+                  key={skill.id}
+                  className="flex items-center justify-between p-3 bg-white border rounded"
+                >
+                  <span>{skill.name}</span>
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="px-2 py-1 border rounded text-sm"
+                      value={
+                        selectedClassifications[skill.id!] || "required"
+                      }
+                      onChange={(e) =>
+                        setSelectedClassifications({
+                          ...selectedClassifications,
+                          [skill.id!]: e.target.value,
+                        })
+                      }
+                    >
+                      {JOB_SKILL_CLASSIFICATIONS.map((classification) => (
+                        <option key={classification} value={classification}>
+                          {classification}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAddSkill(
+                          skill.id!,
+                          selectedClassifications[skill.id!] || "required"
+                        )
+                      }
+                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

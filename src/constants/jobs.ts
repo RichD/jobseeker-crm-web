@@ -6,8 +6,8 @@ export const JOB_STATUSES = [
   "rejected",
 ] as const;
 
-export const JOB_CLASSIFICATIONS = [
+export const JOB_SKILL_CLASSIFICATIONS = [
   "required",
   "preferred",
-  "nice_to_have",
+  "mentioned",
 ] as const;
